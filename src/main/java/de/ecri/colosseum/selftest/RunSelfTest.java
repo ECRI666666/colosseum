@@ -131,6 +131,61 @@ final class RunSelfTest {
         return arena.getBlockState(new BlockPos(0, ArenaLayout.STAND_Y, ArenaLayout.GATE_Z)).is(Blocks.IRON_BARS);
     }
 
+    /** Stößt ein Spieler überall auf der Linie dieses Gitters an? */
+    private static boolean blocksPlayer(List<BlockPos> cells) {
+        boolean alongX = cells.stream().map(BlockPos::getZ).distinct().count() == 1;
+        for (BlockPos cell : cells) for (double step = 0; step < 1; step += 0.25) {
+            double x = alongX ? cell.getX() + step : cell.getX() + 0.5, z = alongX ? cell.getZ() + 0.5 : cell.getZ() + step;
+            if (arena.noCollision(new AABB(x - 0.3, cell.getY(), z - 0.3, x + 0.3, cell.getY() + 1.8, z + 0.3))) {
+                org.slf4j.LoggerFactory.getLogger("COLTEST").error("COLTEST Lücke im Gitter: {} {} {}", x, cell.getY(), z);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Jedes Feld hängt an mindestens zwei Seiten an Nachbarn oder Wand, sonst steht es als Stab für sich. */
+    private static boolean barsConnected(List<BlockPos> cells) {
+        for (BlockPos cell : cells) {
+            var state = arena.getBlockState(cell);
+            int sides = 0;
+            for (var side : List.of(net.minecraft.world.level.block.IronBarsBlock.NORTH, net.minecraft.world.level.block.IronBarsBlock.SOUTH, net.minecraft.world.level.block.IronBarsBlock.EAST, net.minecraft.world.level.block.IronBarsBlock.WEST)) {
+                if (state.getValue(side)) sides++;
+            }
+            if (sides < 2) {
+                org.slf4j.LoggerFactory.getLogger("COLTEST").error("COLTEST Gitterfeld hängt nicht: {} ({} Seiten), N {} S {} O {} W {}", cell, sides, arena.getBlockState(cell.north()).getBlock(), arena.getBlockState(cell.south()).getBlock(), arena.getBlockState(cell.east()).getBlock(), arena.getBlockState(cell.west()).getBlock());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Wie weit kommt man ohne Springen? Nach oben geht es nur auf Treppenstufen. */
+    private static java.util.Set<Long> walkNoJump(BlockPos start) {
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        java.util.ArrayDeque<BlockPos> open = new java.util.ArrayDeque<>();
+        open.add(start);
+        seen.add(start.asLong());
+        while (!open.isEmpty()) {
+            BlockPos at = open.poll();
+            for (Direction d : Direction.Plane.HORIZONTAL) {
+                BlockPos n = at.relative(d);
+                for (int dy : new int[] {1, 0, -1, -2, -3, -4}) {
+                    BlockPos m = n.above(dy);
+                    if (dy == 1 && !(arena.getBlockState(m.below()).getBlock() instanceof net.minecraft.world.level.block.StairBlock)) continue;
+                    boolean head = dy <= 0 || free(at.above(2), false);
+                    boolean drop = true;
+                    for (int k = 0; k > dy; k--) drop &= free(n.above(k), false);
+                    if (head && drop && free(m, false) && free(m.above(), false) && arena.getBlockState(m.below()).isSolid()) {
+                        if (seen.add(m.asLong())) open.add(m);
+                        break;
+                    }
+                }
+            }
+        }
+        return seen;
+    }
+
     private static boolean mobGateClosed() {
         return arena.getBlockState(ArenaLayout.MOB_GATES.get(0).bars().get(0)).is(Blocks.IRON_BARS);
     }
@@ -253,12 +308,23 @@ final class RunSelfTest {
             // Wer direkt am Gitter steht, ist noch auf seiner Seite
             check("Am Gitter im Vorhof: noch im Vorhof", ArenaLayout.zoneAt(0.5, 4.87) == ArenaLayout.ZONE_START && ArenaLayout.zoneAt(-20.14, 7.5) == ArenaLayout.ZONE_START && ArenaLayout.zoneAt(21.14, 7.5) == ArenaLayout.ZONE_START);
             check("Am Gitter von der anderen Seite: dort geblieben", ArenaLayout.zoneAt(0.5, 4.14) == ArenaLayout.ZONE_NORTH && ArenaLayout.zoneAt(-20.86, -7.5) == ArenaLayout.ZONE_WEST && ArenaLayout.zoneAt(21.86, -7.5) == ArenaLayout.ZONE_EAST);
+            // Ein Spieler ist 0,6 breit. Überall auf der Gitterlinie muss er anstoßen, auch genau zwischen zwei Feldern.
             boolean closedDoors = true;
-            for (ArenaDoors.Door d : ArenaDoors.ALL) for (BlockPos cell : d.cells()) {
-                // Spielerbreite mitten im Gitter: Dort darf niemand durchpassen
-                closedDoors &= !arena.noCollision(new AABB(cell.getX() + 0.2, cell.getY(), cell.getZ() + 0.2, cell.getX() + 0.8, cell.getY() + 1.8, cell.getZ() + 0.8));
+            for (ArenaDoors.Door d : ArenaDoors.ALL) closedDoors &= blocksPlayer(d.cells());
+            check("Geschlossene Türen lassen niemanden durch, auch nicht zwischen den Feldern", closedDoors);
+            boolean connected = true;
+            for (ArenaDoors.Door d : ArenaDoors.ALL) connected &= barsConnected(d.cells());
+            check("Türgitter sind verbunden, keine einzelnen Stäbe", connected);
+            connected = true;
+            for (ArenaLayout.MobGate g : ArenaLayout.MOB_GATES) connected &= barsConnected(g.bars());
+            check("Mob-Tore sind verbunden, keine einzelnen Stäbe", connected);
+            java.util.Set<Long> stairsOnly = walkNoJump(BlockPos.containing(ArenaLayout.LOBBY_SPAWN));
+            boolean roofs = true;
+            for (BlockPos roof : List.of(new BlockPos(12, 69, 0), new BlockPos(28, 69, 15), new BlockPos(-28, 69, -15), new BlockPos(-28, 69, 15), new BlockPos(28, 69, -15))) {
+                if (!stairsOnly.contains(roof.asLong())) org.slf4j.LoggerFactory.getLogger("COLTEST").error("COLTEST Dach ohne Springen nicht erreichbar: {}", roof);
+                roofs &= stairsOnly.contains(roof.asLong());
             }
-            check("Geschlossene Türen lassen niemanden durch", closedDoors);
+            check("Alle Dächer sind ohne Springen über Treppen erreichbar", roofs);
             check("Türen zu: im Vorhof eingeschlossen", s1.contains(new BlockPos(0, 65, 26).asLong()) && !s1.contains(northCell.asLong()) && !s1.contains(topCell.asLong()) && !s1.contains(westCell.asLong()) && !s1.contains(eastCell.asLong()));
             ArenaDoors.set(arena, ArenaDoors.NORD, true);
             java.util.Set<Long> s2 = sealed(startCell);
@@ -441,6 +507,10 @@ final class RunSelfTest {
         then(() -> {
             check("Mob auf der Tribüne wird zurückgeholt", mobs().stream().allMatch(m -> m.getY() < 72));
             check("Direkt am geschlossenen Gitter: keine Teleportation", Math.abs(a[0].getZ() - 4.87) < 0.5 && Math.abs(a[0].getX() - 0.5) < 0.5);
+            // Wirklich dagegenlaufen, genau auf die Stelle zwischen zwei Gitterfeldern
+            a[0].teleportTo(0.0, ArenaLayout.STAND_Y, 6.0);
+            a[0].move(net.minecraft.world.entity.MoverType.SELF, new Vec3(0, 0, -4));
+            check("Spieler läuft gegen das Gitter und bleibt davor (z=" + a[0].getZ() + ")", a[0].getZ() > 4.5);
         });
         then(() -> a[0].teleportTo(ArenaLayout.A + 5.5, 85, 0.5));
         sleep(2);

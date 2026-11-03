@@ -1,5 +1,4 @@
 #!/bin/sh
-# Projekt-eigenes JDK 25, falls kein anderes gesetzt ist
 
 #
 # Copyright © 2015-2021 the original authors.

@@ -42,7 +42,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /** Baut Kolosseum und Lobby aus Vanilla-Blöcken. Einmal pro Welt, und neu, wenn BUILD_VERSION steigt. */
 public final class ArenaBuilder {
-    private static final int BUILD_VERSION = 13;
+    private static final int BUILD_VERSION = 16;
     private static final String DISPLAY_VERSION_TAG = "colosseum_display_v" + BUILD_VERSION;
     public static final String DISPLAY_TAG = "colosseum_display";
     private static int unforceAt = -1;
@@ -307,7 +307,7 @@ public final class ArenaBuilder {
         for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) for (int y = y1; y <= y2; y++) for (int z = Math.min(z1, z2); z <= Math.max(z1, z2); z++) d(level, x, y, z, block);
     }
 
-    /** Treppe aus 3 Stufen zur Oberkante 68. high zeigt zur hohen Seite, (x,z) ist die oberste Stufe, width geht quer dazu. */
+    /** Treppe bis auf die Dächer: Die oberste Stufe liegt bündig mit dem Dach (Oberkante 69), springen muss man nicht. high zeigt zur hohen Seite, (x,z) ist die oberste Stufe, width geht quer dazu. */
     private static void stairs(ServerLevel level, int x, int z, Direction high, int steps, int topY) {
         Direction side = high.getClockWise();
         for (int s = 0; s < steps; s++) {
@@ -365,7 +365,7 @@ public final class ArenaBuilder {
             if (!ramp && Math.floorMod(x, 7) < 5) d(level, x, top + 1, z, Blocks.STONE_BRICK_WALL);
         }
         // Nach oben geht es nur von Norden: Das Dach gehört zum zweiten Bereich.
-        for (int x : new int[] {-12, 12}) stairs(level, x, -5, Direction.SOUTH, 3, 67);
+        for (int x : new int[] {-12, 12}) stairs(level, x, -5, Direction.SOUTH, 4, 68);
         lantern(level, -7, top + 1, 2, false);
         lantern(level, 7, top + 1, -2, false);
         lantern(level, 0, 67, 0, true);
@@ -478,18 +478,18 @@ public final class ArenaBuilder {
         box(level, cx + 4, y, cz + 3, cx + 4, y + 2, cz + 3, Blocks.QUARTZ_PILLAR);
         lantern(level, cx, 67, cz, true);
         for (int x = x0; x <= x1; x++) for (int z : new int[] {z0, z1}) if (Math.floorMod(x, 5) < 2) d(level, x, 69, z, Blocks.STONE_BRICK_WALL);
-        lantern(level, x0, 69, z0 + 5, false);
-        lantern(level, x1, 69, z0 + 5, false);
+        lantern(level, x0, 69, z0 + 2, false);
+        lantern(level, x1, 69, z0 + 2, false);
     }
 
     /** Zwei Häuser hängen über Brücken am Mittelteil, die anderen beiden haben Außentreppen. */
     private static void bridges(ServerLevel level) {
         box(level, 20, 68, 5, 22, 68, 9, Blocks.OAK_PLANKS);
         box(level, -22, 68, -9, -20, 68, -5, Blocks.OAK_PLANKS);
-        stairs(level, 35, 15, Direction.WEST, 3, 67);
-        stairs(level, -35, -15, Direction.EAST, 3, 67);
-        stairs(level, -35, 15, Direction.EAST, 3, 67);
-        stairs(level, 35, -15, Direction.WEST, 3, 67);
+        stairs(level, 35, 15, Direction.WEST, 4, 68);
+        stairs(level, -35, -15, Direction.EAST, 4, 68);
+        stairs(level, -35, 15, Direction.EAST, 4, 68);
+        stairs(level, 35, -15, Direction.WEST, 4, 68);
     }
 
     private static void ruinWall(ServerLevel level, int x1, int z1, int x2, int z2) {
@@ -557,7 +557,8 @@ public final class ArenaBuilder {
 
     public static void setMobGates(ServerLevel level, boolean open) {
         for (ArenaLayout.MobGate gate : ArenaLayout.MOB_GATES) {
-            for (BlockPos pos : gate.bars()) level.setBlock(pos, open ? Blocks.AIR.defaultBlockState() : Blocks.IRON_BARS.defaultBlockState(), 2);
+            if (open) for (BlockPos pos : gate.bars()) level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+            else ArenaDoors.placeBars(level, gate.bars());
         }
     }
 
@@ -584,7 +585,7 @@ public final class ArenaBuilder {
     }
 
     public static void closeEntryGate(ServerLevel level) {
-        for (BlockPos pos : entryGateCells()) level.setBlock(pos, Blocks.IRON_BARS.defaultBlockState(), 2);
+        ArenaDoors.placeBars(level, entryGateCells());
     }
 
     public static void setLever(ServerLevel level, BlockPos pos, boolean on) {

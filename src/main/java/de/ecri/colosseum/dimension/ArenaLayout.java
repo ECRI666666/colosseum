@@ -11,7 +11,7 @@ import net.minecraft.world.phys.Vec3;
 public final class ArenaLayout {
     public static final int FLOOR_Y = 64, STAND_Y = 65;
     public static final int A = 48, B = 34, TRIBUNE = 14;
-    /** Höchste begehbare Stelle ist das Dach (Oberkante 68). Die Mauer bleibt deutlich darüber. */
+    /** Höchste begehbare Stelle ist das Dach (Oberkante 69). Die Mauer bleibt deutlich darüber. */
     public static final int WALL_TOP = FLOOR_Y + 14, MOB_CEILING = FLOOR_Y + 10, MOB_FLOOR = FLOOR_Y - 4;
 
     public static final int GATE_Z = B + 1, GATE_HEIGHT = 5;
@@ -99,12 +99,19 @@ public final class ArenaLayout {
         Direction side = out.getClockWise();
         BlockPos mid = new BlockPos((int) Math.round((A - 2) * cos), STAND_Y, (int) Math.round((B - 2) * sin));
         List<BlockPos> bars = new ArrayList<>(), tunnel = new ArrayList<>();
-        BlockPos spawn = null, mouth = null;
+        BlockPos spawn = null, mouth = null, previous = null;
         for (int p = -1; p <= 1; p++) {
             BlockPos cell = mid.relative(side, p);
             while (ring(cell.getX(), cell.getZ()) == 0) cell = cell.relative(out);
             if (p == 0) mouth = cell.relative(out.getOpposite());
             for (int y = 0; y < 4; y++) bars.add(cell.above(y));
+            // Das Oval ist gebogen: Liegen zwei Spalten versetzt, bliebe zwischen ihnen eine schräge Lücke.
+            if (previous != null) {
+                int depth = cell.getX() * out.getStepX() + cell.getZ() * out.getStepZ(), before = previous.getX() * out.getStepX() + previous.getZ() * out.getStepZ();
+                BlockPos shallow = depth < before ? cell : previous;
+                for (int i = 1; i <= Math.abs(depth - before); i++) for (int y = 0; y < 4; y++) bars.add(shallow.relative(out, i).above(y));
+            }
+            previous = cell;
             for (int depth = 1; depth <= 6; depth++) {
                 BlockPos t = cell.relative(out, depth);
                 for (int y = 0; y < 4; y++) tunnel.add(t.above(y));

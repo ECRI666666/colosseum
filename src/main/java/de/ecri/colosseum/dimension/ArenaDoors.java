@@ -5,6 +5,7 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 /**
@@ -54,7 +55,17 @@ public final class ArenaDoors {
     }
 
     public static void set(ServerLevel level, Door door, boolean open) {
-        for (BlockPos pos : door.cells()) level.setBlock(pos, open ? Blocks.AIR.defaultBlockState() : Blocks.IRON_BARS.defaultBlockState(), 18);
+        if (open) for (BlockPos pos : door.cells()) level.setBlock(pos, Blocks.AIR.defaultBlockState(), 18);
+        else placeBars(level, door.cells());
+    }
+
+    /**
+     * Setzt ein geschlossenes Gitter. Erst alle Felder, dann die Verbindungen: Ohne sie steht jedes Feld als
+     * dünner Stab für sich, und zwischen zwei Stäben passt ein Spieler hindurch.
+     */
+    public static void placeBars(ServerLevel level, List<BlockPos> cells) {
+        for (BlockPos pos : cells) level.setBlock(pos, Blocks.IRON_BARS.defaultBlockState(), 18);
+        for (BlockPos pos : cells) level.setBlock(pos, Block.updateFromNeighbourShapes(Blocks.IRON_BARS.defaultBlockState(), level, pos), 18);
     }
 
     public static void closeAll(ServerLevel level) {

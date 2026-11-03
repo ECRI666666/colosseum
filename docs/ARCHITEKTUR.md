@@ -64,6 +64,8 @@ Diese Entscheidungen gehen vor Konzept und Prompt.
 - Leere Flaschen bleiben nach dem Trinken in der Arena nicht im Inventar.
 - Cheat-Menü: `/colosseum debug`, nur für Operatoren und nur in der Arena. Durchläufe mit Cheats kommen nicht auf die Bestenliste.
 
+- Alle Dächer sind über Treppen ohne Springen erreichbar. Gitter werden immer über `ArenaDoors.placeBars` gesetzt, sonst stehen sie als einzelne Stäbe mit Lücken.
+
 ## Technische Regeln
 
 - Sicherung und Inventar liegen in derselben Spielerdatei und werden zusammen gespeichert.
