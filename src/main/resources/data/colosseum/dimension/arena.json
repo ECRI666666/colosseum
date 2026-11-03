@@ -1,0 +1,13 @@
+{
+  "type": "colosseum:arena",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "colosseum:arena",
+      "layers": [],
+      "lakes": false,
+      "features": false,
+      "structure_overrides": []
+    }
+  }
+}
