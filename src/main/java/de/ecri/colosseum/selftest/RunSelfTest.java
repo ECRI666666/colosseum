@@ -160,6 +160,23 @@ final class RunSelfTest {
         return true;
     }
 
+    /** Alle Felder, die ein fliegender Spieler von hier aus erreicht. */
+    private static java.util.Set<Long> fly(BlockPos start) {
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        java.util.ArrayDeque<BlockPos> open = new java.util.ArrayDeque<>();
+        open.add(start);
+        seen.add(start.asLong());
+        while (!open.isEmpty()) {
+            BlockPos at = open.poll();
+            for (Direction d : Direction.values()) {
+                BlockPos m = at.relative(d);
+                if (m.getY() < 60 || m.getY() > 95 || !free(m, true) || !free(m.above(), true)) continue;
+                if (seen.add(m.asLong())) open.add(m);
+            }
+        }
+        return seen;
+    }
+
     /** Wie weit kommt man ohne Springen? Nach oben geht es nur auf Treppenstufen. */
     private static java.util.Set<Long> walkNoJump(BlockPos start) {
         java.util.Set<Long> seen = new java.util.HashSet<>();
@@ -325,6 +342,18 @@ final class RunSelfTest {
                 roofs &= stairsOnly.contains(roof.asLong());
             }
             check("Alle Dächer sind ohne Springen über Treppen erreichbar", roofs);
+            // Fliegen wie mit dem Streitkolben: Vom Vorhof darf man nirgends hin, wo man nicht hin soll.
+            java.util.Set<Long> flight = fly(new BlockPos(0, 75, 26));
+            boolean flightOk = flight.contains(new BlockPos(0, 82, 26).asLong());
+            for (BlockPos forbidden : List.of(new BlockPos(0, 69, 0), new BlockPos(0, 75, -20), new BlockPos(30, 75, 15), new BlockPos(-30, 75, 15), new BlockPos(0, 79, ArenaLayout.B + 1), new BlockPos(0, 85, 26))) {
+                if (flight.contains(forbidden.asLong())) org.slf4j.LoggerFactory.getLogger("COLTEST").error("COLTEST Im Flug erreichbar: {}", forbidden);
+                flightOk &= !flight.contains(forbidden.asLong());
+            }
+            check("Unsichtbare Wände: aus dem Vorhof kommt man auch fliegend nicht heraus (" + flight.size() + " Felder)", flightOk);
+            check("Unsichtbare Wände sind wirklich Barrieren", arena.getBlockState(new BlockPos(0, ArenaLayout.SKY_LIMIT, 26)).is(Blocks.BARRIER) && arena.getBlockState(new BlockPos(ArenaLayout.ZONE_WALL_X, 80, 15)).is(Blocks.BARRIER));
+            check("Mobs: bis Runde 14 keiner schneller", MobFactory.speedChance(1) == 0 && MobFactory.speedChance(14) == 0);
+            check("Mobs: Runde 25 höchstens ein Drittel, nur Tempo I", MobFactory.speedChance(25) <= 0.34 && MobFactory.speedLevel(25) == 0);
+            check("Mobs: Tempo II erst ab Runde 35", MobFactory.speedLevel(34) == 0 && MobFactory.speedLevel(35) == 1);
             check("Türen zu: im Vorhof eingeschlossen", s1.contains(new BlockPos(0, 65, 26).asLong()) && !s1.contains(northCell.asLong()) && !s1.contains(topCell.asLong()) && !s1.contains(westCell.asLong()) && !s1.contains(eastCell.asLong()));
             ArenaDoors.set(arena, ArenaDoors.NORD, true);
             java.util.Set<Long> s2 = sealed(startCell);

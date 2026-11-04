@@ -100,9 +100,19 @@ public final class MobFactory {
         if (instance != null) instance.addPermanentModifier(new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
+    /** Bis Runde 14 ist niemand schneller, danach langsam mehr Mobs, höchstens 40 %. */
+    public static double speedChance(int round) {
+        return round < 15 ? 0.0 : Math.min(0.4, (round - 14) * 0.03);
+    }
+
+    /** Die zweite Tempo-Stufe kommt erst ab Runde 35. */
+    public static int speedLevel(int round) {
+        return round >= 35 ? 1 : 0;
+    }
+
     /** Mit jeder Runde wird Schnelligkeit und Stärke wahrscheinlicher. */
     private static void scaleEffects(Mob mob, int round, RandomSource random) {
-        if (round >= 6 && random.nextDouble() < Math.min(0.6, (round - 5) * 0.05)) mob.addEffect(new MobEffectInstance(MobEffects.SPEED, MobEffectInstance.INFINITE_DURATION, round >= 16 ? 1 : 0));
+        if (random.nextDouble() < speedChance(round)) mob.addEffect(new MobEffectInstance(MobEffects.SPEED, MobEffectInstance.INFINITE_DURATION, speedLevel(round)));
         if (round >= 10 && random.nextDouble() < Math.min(0.5, (round - 9) * 0.04)) mob.addEffect(new MobEffectInstance(MobEffects.STRENGTH, MobEffectInstance.INFINITE_DURATION, round >= 20 ? 1 : 0));
     }
 

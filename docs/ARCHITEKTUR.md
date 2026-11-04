@@ -66,6 +66,8 @@ Diese Entscheidungen gehen vor Konzept und Prompt.
 
 - Alle Dächer sind über Treppen ohne Springen erreichbar. Gitter werden immer über `ArenaDoors.placeBars` gesetzt, sonst stehen sie als einzelne Stäbe mit Lücken.
 
+- Unsichtbare Wände (Barrieren) statt Teleportation nach oben: Decke auf Höhe 84, Ring auf der Außenmauer, Wände über den Bereichsgrenzen. Mobs bekommen Tempo erst ab Runde 15 (höchstens 40 %), Tempo II erst ab Runde 35.
+
 ## Technische Regeln
 
 - Sicherung und Inventar liegen in derselben Spielerdatei und werden zusammen gespeichert.
