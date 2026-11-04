@@ -57,6 +57,36 @@ public final class ArenaDoors {
     public static void set(ServerLevel level, Door door, boolean open) {
         if (open) for (BlockPos pos : door.cells()) level.setBlock(pos, Blocks.AIR.defaultBlockState(), 18);
         else placeBars(level, door.cells());
+        setSkyWall(level, door, open);
+    }
+
+    /**
+     * Die unsichtbare Wand über einer Tür: Sie hält nur auf, solange die Tür zu ist. Danach darf man auch
+     * über die Grenze fliegen und von oben hinunter.
+     */
+    public static List<BlockPos> skyWall(Door door) {
+        List<BlockPos> out = new ArrayList<>();
+        if (door == NORD) {
+            // Vom Vorhof nicht aufs Dach des Mittelteils. Dessen Brücke nach Osten führt bei x = 20 durch den Vorhof und bleibt frei.
+            for (int x = -ArenaLayout.ZONE_WALL_X + 1; x <= 19; x++) column(out, x, 5, 68);
+            for (int z = 6; z <= 10; z++) column(out, 19, z, 69);
+            column(out, 20, 10, 69);
+        } else if (door == WEST || door == EAST) {
+            int x = door == WEST ? -ArenaLayout.ZONE_WALL_X : ArenaLayout.ZONE_WALL_X;
+            for (int z = -ArenaLayout.B; z <= ArenaLayout.B; z++) if (ArenaLayout.ring(x, z) == 0) column(out, x, z, 73);
+        }
+        return out;
+    }
+
+    private static void column(List<BlockPos> out, int x, int z, int from) {
+        for (int y = from; y <= ArenaLayout.SKY_LIMIT; y++) out.add(new BlockPos(x, y, z));
+    }
+
+    private static void setSkyWall(ServerLevel level, Door door, boolean open) {
+        for (BlockPos pos : skyWall(door)) {
+            if (open && level.getBlockState(pos).is(Blocks.BARRIER)) level.setBlock(pos, Blocks.AIR.defaultBlockState(), 18);
+            else if (!open && level.getBlockState(pos).isAir()) level.setBlock(pos, Blocks.BARRIER.defaultBlockState(), 18);
+        }
     }
 
     /**

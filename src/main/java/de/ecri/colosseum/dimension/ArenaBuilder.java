@@ -42,7 +42,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /** Baut Kolosseum und Lobby aus Vanilla-Blöcken. Einmal pro Welt, und neu, wenn BUILD_VERSION steigt. */
 public final class ArenaBuilder {
-    private static final int BUILD_VERSION = 17;
+    private static final int BUILD_VERSION = 18;
     private static final String DISPLAY_VERSION_TAG = "colosseum_display_v" + BUILD_VERSION;
     public static final String DISPLAY_TAG = "colosseum_display";
     private static int unforceAt = -1;
@@ -354,7 +354,7 @@ public final class ArenaBuilder {
 
     /**
      * Wer hoch springt, etwa mit dem Streitkolben, stößt an unsichtbare Wände, statt teleportiert zu werden:
-     * eine Decke, ein Ring auf der Außenmauer und je eine Wand über den Grenzen der Bereiche.
+     * eine hohe Decke, ein Ring auf der Außenmauer und je eine Wand über geschlossenen Türen.
      */
     private static void buildInvisibleWalls(ServerLevel level) {
         int a = ArenaLayout.A + 3, b = ArenaLayout.B + 3;
@@ -363,15 +363,7 @@ public final class ArenaBuilder {
             if (ring <= 2) barrier(level, x, ArenaLayout.SKY_LIMIT, z);
             if (ring == 1 || ring == 2) barrierColumn(level, x, z, ArenaLayout.WALL_TOP + 1);
         }
-        // Über den Trennwänden zwischen Ost, West und der Mitte
-        for (int x : new int[] {-ArenaLayout.ZONE_WALL_X, ArenaLayout.ZONE_WALL_X}) for (int z = -b; z <= b; z++) {
-            if (ArenaLayout.ring(x, z) == 0) barrierColumn(level, x, z, 73);
-        }
-        // Vom Vorhof nicht aufs Dach des Mittelteils. Dessen Brücke nach Osten führt bei x = 20 durch den Vorhof und bleibt frei.
-        for (int x = -ArenaLayout.ZONE_WALL_X + 1; x <= 19; x++) barrierColumn(level, x, 5, 68);
-        for (int z = 6; z <= 9; z++) barrierColumn(level, 19, z, 69);
-        barrierColumn(level, 19, 10, 69);
-        barrierColumn(level, 20, 10, 69);
+        for (ArenaDoors.Door door : ArenaDoors.ALL) ArenaDoors.set(level, door, false);
     }
 
     /** Die Kaufstellen: fester Block dahinter, Knopf davor, darüber das Schild mit dem Preis. */

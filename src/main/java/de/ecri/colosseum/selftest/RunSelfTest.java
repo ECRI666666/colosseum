@@ -170,7 +170,7 @@ final class RunSelfTest {
             BlockPos at = open.poll();
             for (Direction d : Direction.values()) {
                 BlockPos m = at.relative(d);
-                if (m.getY() < 60 || m.getY() > 95 || !free(m, true) || !free(m.above(), true)) continue;
+                if (m.getY() < 60 || m.getY() > ArenaLayout.SKY_LIMIT + 5 || !free(m, true) || !free(m.above(), true)) continue;
                 if (seen.add(m.asLong())) open.add(m);
             }
         }
@@ -344,8 +344,8 @@ final class RunSelfTest {
             check("Alle Dächer sind ohne Springen über Treppen erreichbar", roofs);
             // Fliegen wie mit dem Streitkolben: Vom Vorhof darf man nirgends hin, wo man nicht hin soll.
             java.util.Set<Long> flight = fly(new BlockPos(0, 75, 26));
-            boolean flightOk = flight.contains(new BlockPos(0, 82, 26).asLong());
-            for (BlockPos forbidden : List.of(new BlockPos(0, 69, 0), new BlockPos(0, 75, -20), new BlockPos(30, 75, 15), new BlockPos(-30, 75, 15), new BlockPos(0, 79, ArenaLayout.B + 1), new BlockPos(0, 85, 26))) {
+            boolean flightOk = flight.contains(new BlockPos(0, ArenaLayout.SKY_LIMIT - 2, 26).asLong());
+            for (BlockPos forbidden : List.of(new BlockPos(0, 69, 0), new BlockPos(0, 75, -20), new BlockPos(30, 75, 15), new BlockPos(-30, 75, 15), new BlockPos(0, 79, ArenaLayout.B + 1), new BlockPos(0, ArenaLayout.SKY_LIMIT + 1, 26))) {
                 if (flight.contains(forbidden.asLong())) org.slf4j.LoggerFactory.getLogger("COLTEST").error("COLTEST Im Flug erreichbar: {}", forbidden);
                 flightOk &= !flight.contains(forbidden.asLong());
             }
@@ -880,6 +880,9 @@ final class RunSelfTest {
             check("Tür gekauft: offen, Punkte abgezogen", RUN.isDoorOpen(ArenaDoors.NORD) && RUN.isZoneOpen(ArenaLayout.ZONE_NORTH) && RUN.points(p.getUUID()) == 7 && arena.getBlockState(new BlockPos(0, 65, 4)).isAir());
             press(p, nord.pos());
             check("Zweimal drücken kostet nichts", RUN.points(p.getUUID()) == 7);
+            check("Tür offen: Vom Dach kann man in den Vorhof hinunter", arena.getBlockState(new BlockPos(0, 70, 5)).isAir());
+            check("Tür offen: Die Wand über den anderen Türen bleibt", arena.getBlockState(new BlockPos(ArenaLayout.ZONE_WALL_X, 80, 15)).is(Blocks.BARRIER));
+            check("Tür offen: Decke und Mauer-Ring bleiben", arena.getBlockState(new BlockPos(0, ArenaLayout.SKY_LIMIT, 0)).is(Blocks.BARRIER) && arena.getBlockState(new BlockPos(ArenaLayout.A + 1, ArenaLayout.WALL_TOP + 2, 0)).is(Blocks.BARRIER));
             check("Während der Welle gehen die Mob-Tore im neuen Bereich auf", ArenaLayout.MOB_GATES.stream().filter(g -> g.zone() == ArenaLayout.ZONE_NORTH).allMatch(g -> arena.getBlockState(g.bars().get(0)).isAir()));
             check("Mob-Tore im Westen bleiben zu", ArenaLayout.MOB_GATES.stream().filter(g -> g.zone() == ArenaLayout.ZONE_WEST).allMatch(g -> arena.getBlockState(g.bars().get(0)).is(Blocks.IRON_BARS)));
             BlockPos boxBefore = RUN.boxPos();
@@ -1185,6 +1188,7 @@ final class RunSelfTest {
             Leaderboard.load(server);
             check("Bestenliste überlebt das Neuladen aus der Datei (" + before + " Einträge)", Leaderboard.byRounds().size() == before && before >= 2);
             arena.getBlockEntity(new BlockPos(-5, 68, ArenaLayout.LOBBY_Z0));
+            check("Neuer Durchlauf: Unsichtbare Wand über der Tür ist wieder da", arena.getBlockState(new BlockPos(0, 70, 5)).is(Blocks.BARRIER));
             check("Türen sind wieder zu", !RUN.isDoorOpen(ArenaDoors.NORD) && arena.getBlockState(new BlockPos(0, 65, 4)).is(Blocks.IRON_BARS) && !RUN.isZoneOpen(ArenaLayout.ZONE_NORTH));
             tp(b[0], false);
             check("Durch das Hallen-Portal: Konto bleibt, keine Flaschen", PointsAccount.balance(b[0]) > 0 && count(b[0], Items.EXPERIENCE_BOTTLE) == 0);

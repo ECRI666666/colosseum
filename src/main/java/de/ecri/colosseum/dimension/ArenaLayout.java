@@ -13,8 +13,8 @@ public final class ArenaLayout {
     public static final int A = 48, B = 34, TRIBUNE = 14;
     /** Höchste begehbare Stelle ist das Dach (Oberkante 69). Die Mauer bleibt deutlich darüber. */
     public static final int WALL_TOP = FLOOR_Y + 14, MOB_CEILING = FLOOR_Y + 10, MOB_FLOOR = FLOOR_Y - 4;
-    /** Unsichtbare Decke über der Arena. Darunter kann man mit der Streitkolben-Windböe frei springen. */
-    public static final int SKY_LIMIT = FLOOR_Y + 20;
+    /** Unsichtbare Decke hoch über der Arena. Darunter kann man mit der Streitkolben-Windböe frei fliegen. */
+    public static final int SKY_LIMIT = FLOOR_Y + 66;
 
     public static final int GATE_Z = B + 1, GATE_HEIGHT = 5;
     public static final int LOBBY_Z0 = B + 15, LOBBY_Z1 = LOBBY_Z0 + 26, LOBBY_X = 7, LOBBY_TOP = 70;
@@ -49,7 +49,7 @@ public final class ArenaLayout {
     /** Knopf zum Rufen des Exfil, er steht nur in der Pause nach jeder 5. Runde. */
     public static final BlockPos EXFIL_BUTTON = new BlockPos(3, 65, 12);
 
-    public static final AABB BOUNDS = new AABB(-A - TRIBUNE - 4, 55, -B - TRIBUNE - 4, A + TRIBUNE + 4, 95, LOBBY_Z1 + 10);
+    public static final AABB BOUNDS = new AABB(-A - TRIBUNE - 4, 55, -B - TRIBUNE - 4, A + TRIBUNE + 4, SKY_LIMIT + 5, LOBBY_Z1 + 10);
     public static final int[] NICHE_Z = {LOBBY_Z0 + 5, LOBBY_Z0 + 12, LOBBY_Z0 + 19};
 
     public static final BlockPos LEVER_LEFT = new BlockPos(-2, STAND_Y + 1, GATE_Z + 2);
