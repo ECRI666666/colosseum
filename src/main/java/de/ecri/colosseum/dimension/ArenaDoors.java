@@ -71,8 +71,14 @@ public final class ArenaDoors {
             for (int x = -ArenaLayout.ZONE_WALL_X + 1; x <= 19; x++) column(out, x, 5, 68);
             for (int z = 6; z <= 10; z++) column(out, 19, z, 69);
             column(out, 20, 10, 69);
-        } else if (door == WEST || door == EAST) {
-            int x = door == WEST ? -ArenaLayout.ZONE_WALL_X : ArenaLayout.ZONE_WALL_X;
+        }
+        return out;
+    }
+
+    /** Über den Trennmauern bleibt die Wand immer stehen, sonst könnte man oben auf der Mauerkante stehen. */
+    public static List<BlockPos> dividerWalls() {
+        List<BlockPos> out = new ArrayList<>();
+        for (int x : new int[] {-ArenaLayout.ZONE_WALL_X, ArenaLayout.ZONE_WALL_X}) {
             for (int z = -ArenaLayout.B; z <= ArenaLayout.B; z++) if (ArenaLayout.ring(x, z) == 0) column(out, x, z, 73);
         }
         return out;

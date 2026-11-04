@@ -66,7 +66,7 @@ Diese Entscheidungen gehen vor Konzept und Prompt.
 
 - Alle Dächer sind über Treppen ohne Springen erreichbar. Gitter werden immer über `ArenaDoors.placeBars` gesetzt, sonst stehen sie als einzelne Stäbe mit Lücken.
 
-- Unsichtbare Wände (Barrieren) statt Teleportation nach oben: Decke auf Höhe 130, Ring auf der Außenmauer, Wände über geschlossenen Türen. Geht eine Tür auf, verschwindet ihre Wand; beim neuen Durchlauf kommt sie zurück. Mobs bekommen Tempo erst ab Runde 15 (höchstens 40 %), Tempo II erst ab Runde 35.
+- Unsichtbare Wände (Barrieren) statt Teleportation nach oben: Decke auf Höhe 130, Ring auf der Außenmauer, Wände über den Trennmauern (immer) und über dem Vorhof-Rand des Mittelteils. Geht die Nordhof-Tür auf, verschwindet die Wand am Vorhof-Rand; beim neuen Durchlauf kommt sie zurück. Mobs bekommen Tempo erst ab Runde 15 (höchstens 40 %), Tempo II erst ab Runde 35.
 
 ## Technische Regeln
 

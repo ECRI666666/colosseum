@@ -1063,6 +1063,7 @@ final class RunSelfTest {
                     boolean open = true;
                     for (ArenaDoors.Door door : ArenaDoors.ALL) open &= RUN.isDoorOpen(door);
                     check("Cheat-Menü: alle Türen offen", open);
+                    check("Alle Türen offen: Auf den Trennmauern kann man trotzdem nicht stehen", arena.getBlockState(new BlockPos(ArenaLayout.ZONE_WALL_X, 73, 15)).is(Blocks.BARRIER) && arena.getBlockState(new BlockPos(-ArenaLayout.ZONE_WALL_X, 73, -15)).is(Blocks.BARRIER));
                     p.setHealth(5F);
                     click.accept(de.ecri.colosseum.shop.DebugMenu.Action.HEAL);
                     check("Cheat-Menü: Heilen", p.getHealth() == p.getMaxHealth());

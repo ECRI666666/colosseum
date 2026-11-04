@@ -42,7 +42,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /** Baut Kolosseum und Lobby aus Vanilla-Blöcken. Einmal pro Welt, und neu, wenn BUILD_VERSION steigt. */
 public final class ArenaBuilder {
-    private static final int BUILD_VERSION = 18;
+    private static final int BUILD_VERSION = 19;
     private static final String DISPLAY_VERSION_TAG = "colosseum_display_v" + BUILD_VERSION;
     public static final String DISPLAY_TAG = "colosseum_display";
     private static int unforceAt = -1;
@@ -363,6 +363,7 @@ public final class ArenaBuilder {
             if (ring <= 2) barrier(level, x, ArenaLayout.SKY_LIMIT, z);
             if (ring == 1 || ring == 2) barrierColumn(level, x, z, ArenaLayout.WALL_TOP + 1);
         }
+        for (BlockPos pos : ArenaDoors.dividerWalls()) barrier(level, pos.getX(), pos.getY(), pos.getZ());
         for (ArenaDoors.Door door : ArenaDoors.ALL) ArenaDoors.set(level, door, false);
     }
 
